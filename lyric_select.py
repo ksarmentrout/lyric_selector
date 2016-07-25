@@ -112,7 +112,7 @@ def lyric_gen():
 
         counter = 0
         for row in reader:
-            while counter != random_row:
+            if counter != random_row:
                 counter += 1
                 continue
 
@@ -120,7 +120,7 @@ def lyric_gen():
             song = row[0]
             artist = row[1]
 
-            colnum = random.randint(2, total_cols)
+            colnum = random.randint(2, total_cols-1)
             line = row[colnum]
 
             lower = colnum - 2
@@ -131,6 +131,12 @@ def lyric_gen():
                 upper = total_cols - 1
 
             context = row[lower:upper]
+
+            if counter == random_row:
+                break
+
+
+
 
     sys.stdout.write('Lyric: \n')
     sys.stdout.write(line + '\n\n')

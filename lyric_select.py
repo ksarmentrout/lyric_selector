@@ -79,6 +79,11 @@ def song_entry():
             return
         else:
             lyrics = str(lyrics_section.text)
+
+            if "Sorry, we have no" in lyrics:
+                sys.stdout.write('No lyrics were found. Sorry :(\n')
+                return
+
             try:
                 write_lyrics_to_file(lyrics, song_name=song_name, artist_name=artist_name)
             except Exception:
@@ -91,6 +96,19 @@ def song_entry():
 
 def write_lyrics_to_file(lyrics, song_name, artist_name):
     split_lyrics = lyrics.split('\n')
+
+    first_few_lines = split_lyrics[:6]
+    sys.stdout.write('\n')
+    for line in first_few_lines:
+        sys.stdout.write(line + '\n')
+    sys.stdout.write('\n' + 'These are the first few lyrics we found.\n')
+    response = str(raw_input('Are these correct? (y/n): '))
+
+    if response == 'n':
+        return
+
+    sys.stdout.write('\n')
+
     full_row = [song_name, artist_name]
     for line in split_lyrics:
         if line != '':

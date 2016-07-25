@@ -10,11 +10,14 @@ from bs4 import BeautifulSoup
 def main():
     parser = argparse.ArgumentParser(description='Return a random lyric from song database.')
     parser.add_argument('--input', dest='entering_song', nargs='?', const=True, default=False)
+    parser.add_argument('--songlist', dest='show_songlist', nargs='?', const=True, default=False)
 
     args = parser.parse_args()
 
     if args.entering_song:
         song_entry()
+    elif args.show_songlist:
+        list_songs()
     else:
         lyric_gen()
 
@@ -119,17 +122,31 @@ def write_lyrics_to_file(lyrics, song_name, artist_name):
         writer.writerow(full_row)
 
 
+def list_songs():
+    with open('lyrics.txt', 'rU') as csvfile:
+        reader = csv.reader(csvfile, delimiter = ';')
+        songs = []
+        for row in reader:
+            song = (row[1], row[0])
+            songs.append(song)
+        songs = sorted(songs, key=lambda song: song[0])
+        sys.stdout.write('\n')
+        for song in songs:
+            sys.stdout.write('Artist: ' + song[0] + ', Song: ' + song[1] + '\n')
+    return
+
+
 def lyric_gen():
     line = ''
     song = ''
     artist = ''
     context = []
 
-    with open('lyrics.txt', 'rU') as file:
-        reader = csv.reader(file, delimiter = ';')
+    with open('lyrics.txt', 'rU') as csvfile:
+        reader = csv.reader(csvfile, delimiter = ';')
         data = list(reader)
         row_count = len(data)
-        file.seek(0)
+        csvfile.seek(0)
 
         random_row = random.randint(0, row_count-1)
 

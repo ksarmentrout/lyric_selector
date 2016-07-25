@@ -28,9 +28,58 @@ def song_entry():
 
     # Web-scrape for lyrics
     sys.stdout.write('Searching for lyrics...\n')
-    songlyrics_search = False
+    lyrics = metrolyrics_search(song_name=song_name, artist_name=artist_name)
 
+    if lyrics is not None:
+        try:
+            written = write_lyrics_to_file(lyrics, song_name=song_name, artist_name=artist_name, first_try=True)
+        except Exception:
+            sys.stdout.write('Whoops. Lyrics were found but something went wrong.\n')
+            return
+        if written:
+            return
+
+    lyrics = songlyrics_search(song_name=song_name, artist_name=artist_name)
+
+    if lyrics is not None:
+        try:
+            written = write_lyrics_to_file(lyrics, song_name=song_name, artist_name=artist_name)
+        except Exception:
+            sys.stdout.write('Whoops. Lyrics were found but something went wrong.\n')
+            return
+        if written:
+            return
+
+
+
+
+def metrolyrics_search(song_name, artist_name):
     # Search on MetroLyrics
+    (fixed_song_name, fixed_artist_name) = format_names(song_name=song_name, artist_name=artist_name)
+
+    url = 'http://www.metrolyrics.com/' + fixed_song_name + '-lyrics-' + fixed_artist_name + '.html'
+
+    resp = requests.get(url)
+    soup = BeautifulSoup(resp.text, "html.parser")
+
+    text = soup.find('div', {'id' : 'lyrics-body-text'})
+
+    lyrics = None
+    if text is not None:
+        lyrics = ''
+        paragraphs = text.find_all('p')
+        for para in paragraphs:
+            try:
+                stanza = str(para.text)
+            except UnicodeEncodeError:
+                stanza = para.text.encode('ascii', 'ignore')
+
+            lyrics = lyrics + stanza + '\n'
+
+    return lyrics
+
+
+def format_names(song_name, artist_name):
     new_song_name = song_name.lower().replace(' ', '-')
     new_artist_name = artist_name.lower().replace(' ', '-')
 
@@ -46,58 +95,36 @@ def song_entry():
     fixed_song_name = fixed_song_name.replace('--', '-')
     fixed_artist_name = fixed_artist_name.replace('--', '-')
 
-    url = 'http://www.metrolyrics.com/' + fixed_song_name + '-lyrics-' + fixed_artist_name + '.html'
+    return fixed_song_name, fixed_artist_name
 
+
+def songlyrics_search(artist_name, song_name):
+    sys.stdout.write('Trying on SongLyrics now...\n')
+
+    (fixed_artist_name, fixed_song_name) = format_names(song_name=song_name, artist_name=artist_name)
+
+    url = 'http://www.songlyrics.com/' + fixed_artist_name + '/' + fixed_song_name + '-lyrics/'
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    text = soup.find('div', {'id' : 'lyrics-body-text'})
-
-    if text is not None:
-        lyrics = ''
-        paragraphs = text.find_all('p')
-        for para in paragraphs:
-            lyrics = lyrics + str(para.text) + '\n'
-        try:
-            write_lyrics_to_file(lyrics, song_name=song_name, artist_name=artist_name)
-        except Exception:
-            sys.stdout.write('Whoops. Lyrics were found but something went wrong.\n')
-            return
-
-        sys.stdout.write('Lyrics added successfully!\n')
-        return
+    lyrics_section = soup.find('p', {'id' : 'songLyricsDiv'})
+    if lyrics_section is None:
+        sys.stdout.write('No lyrics were found. Sorry :(\n')
+        return None
     else:
-        songlyrics_search = True
-
-    if songlyrics_search:
-        sys.stdout.write('Trying on SongLyrics now...\n')
-
-        url = 'http://www.songlyrics.com/' + fixed_artist_name + '/' + fixed_song_name + '-lyrics/'
-        resp = requests.get(url)
-        soup = BeautifulSoup(resp.text, "html.parser")
-
-        lyrics_section = soup.find('p', {'id' : 'songLyricsDiv'})
-        if lyrics_section is None:
-            sys.stdout.write('No lyrics were found. Sorry :(\n')
-            return
-        else:
+        try:
             lyrics = str(lyrics_section.text)
+        except UnicodeEncodeError:
+            lyrics = lyrics_section.text.encode('ascii', 'ignore')
 
-            if "Sorry, we have no" in lyrics:
-                sys.stdout.write('No lyrics were found. Sorry :(\n')
-                return
+        if "Sorry, we have no" in lyrics:
+            sys.stdout.write('No lyrics were found. Sorry :(\n')
+            return None
 
-            try:
-                write_lyrics_to_file(lyrics, song_name=song_name, artist_name=artist_name)
-            except Exception:
-                sys.stdout.write('Whoops. Lyrics were found but something went wrong.\n')
-                return
-
-            sys.stdout.write('Lyrics added successfully!\n')
-            return
+    return lyrics
 
 
-def write_lyrics_to_file(lyrics, song_name, artist_name):
+def write_lyrics_to_file(lyrics, song_name, artist_name, first_try=False):
     split_lyrics = lyrics.split('\n')
 
     first_few_lines = split_lyrics[:6]
@@ -108,7 +135,11 @@ def write_lyrics_to_file(lyrics, song_name, artist_name):
     response = str(raw_input('Are these correct? (y/n): '))
 
     if response == 'n':
-        return
+        if first_try:
+            return False
+        else:
+            sys.stdout.write('Lyrics were not added.\n')
+            return False
 
     sys.stdout.write('\n')
 
@@ -120,6 +151,9 @@ def write_lyrics_to_file(lyrics, song_name, artist_name):
     with open('lyrics.txt', 'a') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
         writer.writerow(full_row)
+
+    sys.stdout.write('Lyrics added successfully!\n')
+    return True
 
 
 def list_songs():

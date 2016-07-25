@@ -30,6 +30,7 @@ def song_entry():
     # Search on MetroLyrics
     new_song_name = song_name.lower().replace(' ', '-')
     new_artist_name = artist_name.lower().replace(' ', '-')
+
     fixed_song_name = ''
     fixed_artist_name = ''
     for x in new_artist_name:
@@ -39,7 +40,11 @@ def song_entry():
         if y.isalpha() or y == '-':
             fixed_song_name = fixed_song_name + y
 
+    fixed_song_name = fixed_song_name.replace('--', '-')
+    fixed_artist_name = fixed_artist_name.replace('--', '-')
+
     url = 'http://www.metrolyrics.com/' + fixed_song_name + '-lyrics-' + fixed_artist_name + '.html'
+
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -102,7 +107,7 @@ def lyric_gen():
     artist = ''
     context = []
 
-    with open('lyrics.txt', 'r') as file:
+    with open('lyrics.txt', 'rU') as file:
         reader = csv.reader(file, delimiter = ';')
         data = list(reader)
         row_count = len(data)
@@ -128,7 +133,7 @@ def lyric_gen():
             if lower <= 1:
                 lower = 2
             if upper >= total_cols:
-                upper = total_cols - 1
+                upper = total_cols
 
             context = row[lower:upper]
 

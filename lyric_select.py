@@ -51,8 +51,6 @@ def song_entry():
             return
 
 
-
-
 def metrolyrics_search(song_name, artist_name):
     # Search on MetroLyrics
     (fixed_song_name, fixed_artist_name) = format_names(song_name=song_name, artist_name=artist_name)
@@ -79,25 +77,6 @@ def metrolyrics_search(song_name, artist_name):
     return lyrics
 
 
-def format_names(song_name, artist_name):
-    new_song_name = song_name.lower().replace(' ', '-')
-    new_artist_name = artist_name.lower().replace(' ', '-')
-
-    fixed_song_name = ''
-    fixed_artist_name = ''
-    for x in new_artist_name:
-        if x.isalpha() or x == '-':
-            fixed_artist_name = fixed_artist_name + x
-    for y in new_song_name:
-        if y.isalpha() or y == '-':
-            fixed_song_name = fixed_song_name + y
-
-    fixed_song_name = fixed_song_name.replace('--', '-')
-    fixed_artist_name = fixed_artist_name.replace('--', '-')
-
-    return fixed_song_name, fixed_artist_name
-
-
 def songlyrics_search(artist_name, song_name):
     sys.stdout.write('Trying on SongLyrics now...\n')
 
@@ -122,6 +101,25 @@ def songlyrics_search(artist_name, song_name):
             return None
 
     return lyrics
+
+
+def format_names(song_name, artist_name):
+    new_song_name = song_name.lower().replace(' ', '-')
+    new_artist_name = artist_name.lower().replace(' ', '-')
+
+    fixed_song_name = ''
+    fixed_artist_name = ''
+    for x in new_artist_name:
+        if x.isalpha() or x == '-':
+            fixed_artist_name = fixed_artist_name + x
+    for y in new_song_name:
+        if y.isalpha() or y == '-':
+            fixed_song_name = fixed_song_name + y
+
+    fixed_song_name = fixed_song_name.replace('--', '-')
+    fixed_artist_name = fixed_artist_name.replace('--', '-')
+
+    return fixed_song_name, fixed_artist_name
 
 
 def write_lyrics_to_file(lyrics, song_name, artist_name, first_try=False):

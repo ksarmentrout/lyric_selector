@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description='Return a random lyric from song database.')
     parser.add_argument('--input', dest='entering_song', nargs='?', const=True, default=False)
     parser.add_argument('--songlist', dest='show_songlist', nargs='?', const=True, default=False)
+    parser.add_argument('--url', dest='url', default=None)
 
     args = parser.parse_args()
 
@@ -18,6 +19,12 @@ def main():
         song_entry()
     elif args.show_songlist:
         list_songs()
+    elif args.url is not None:
+        url = args.url
+        url_song_entry(url)
+    elif args.url is None:
+        sys.stdout.write('--url requires one input argument.\n')
+        return
     else:
         lyric_gen()
 
@@ -51,11 +58,29 @@ def song_entry():
             return
 
 
-def metrolyrics_search(song_name, artist_name):
+def url_song_entry(url):
+    song_name = raw_input('Song name: ').strip()
+    artist_name = raw_input('Artist name: ').strip()
+
+    if 'metro' in url:
+        lyrics = metrolyrics_search(song_name=song_name, artist_name=artist_name, user_url=url)
+    elif 'songlyrics' in url:
+        lyrics = songlyrics_search(song_name=song_name, artist_name=artist_name, user_url=url)
+    else:
+        sys.stdout.write('URL must be from either songLyrics or metroLyrics. Other sites unsupported at this time.\n')
+        return
+
+    write_lyrics_to_file(lyrics=lyrics, song_name=song_name, artist_name=artist_name)
+
+
+def metrolyrics_search(song_name, artist_name, user_url=None):
     # Search on MetroLyrics
     (fixed_song_name, fixed_artist_name) = format_names(song_name=song_name, artist_name=artist_name)
 
-    url = 'http://www.metrolyrics.com/' + fixed_song_name + '-lyrics-' + fixed_artist_name + '.html'
+    if user_url is not None:
+        url = user_url
+    else:
+        url = 'http://www.metrolyrics.com/' + fixed_song_name + '-lyrics-' + fixed_artist_name + '.html'
 
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -77,12 +102,16 @@ def metrolyrics_search(song_name, artist_name):
     return lyrics
 
 
-def songlyrics_search(artist_name, song_name):
+def songlyrics_search(artist_name, song_name, user_url=None):
     sys.stdout.write('Trying on SongLyrics now...\n')
 
     (fixed_artist_name, fixed_song_name) = format_names(song_name=song_name, artist_name=artist_name)
 
-    url = 'http://www.songlyrics.com/' + fixed_artist_name + '/' + fixed_song_name + '-lyrics/'
+    if user_url is not None:
+        url = user_url
+    else:
+        url = 'http://www.songlyrics.com/' + fixed_artist_name + '/' + fixed_song_name + '-lyrics/'
+
     resp = requests.get(url)
     soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -144,6 +173,7 @@ def write_lyrics_to_file(lyrics, song_name, artist_name, first_try=False):
     full_row = [song_name, artist_name]
     for line in split_lyrics:
         if line != '':
+            line = line.replace('\n', '')
             full_row.append(line)
 
     with open('lyrics.txt', 'a') as csvfile:
@@ -206,9 +236,6 @@ def lyric_gen():
 
             if counter == random_row:
                 break
-
-
-
 
     sys.stdout.write('Lyric: \n')
     sys.stdout.write(line + '\n\n')

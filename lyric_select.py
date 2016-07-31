@@ -11,7 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description='Return a random lyric from song database.')
     parser.add_argument('--input', dest='entering_song', nargs='?', const=True, default=False)
     parser.add_argument('--songlist', dest='show_songlist', nargs='?', const=True, default=False)
-    parser.add_argument('--url', dest='url', default=None)
+    parser.add_argument('--url', dest='url', nargs='?', const='', default=None)
 
     args = parser.parse_args()
 
@@ -22,9 +22,6 @@ def main():
     elif args.url is not None:
         url = args.url
         url_song_entry(url)
-    elif args.url is None:
-        sys.stdout.write('--url requires one input argument.\n')
-        return
     else:
         lyric_gen()
 
@@ -61,6 +58,10 @@ def song_entry():
 def url_song_entry(url):
     song_name = raw_input('Song name: ').strip()
     artist_name = raw_input('Artist name: ').strip()
+
+    if url == '':
+        sys.stdout.write('Please enter a URL after the --url flag.')
+        return
 
     if 'metro' in url:
         lyrics = metrolyrics_search(song_name=song_name, artist_name=artist_name, user_url=url)

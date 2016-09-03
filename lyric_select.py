@@ -27,8 +27,14 @@ def main():
 
 
 def song_entry():
-    song_name = raw_input('Song name: ').strip()
-    artist_name = raw_input('Artist name: ').strip()
+    py_version = _get_python_version()
+
+    if py_version == 3:
+        song_name = input('Song name: ').strip()
+        artist_name = input('Artist name: ').strip()
+    else:
+        song_name = raw_input('Song name: ').strip()
+        artist_name = raw_input('Artist name: ').strip()
 
     # Web-scrape for lyrics
     sys.stdout.write('Searching for lyrics...\n')
@@ -56,8 +62,14 @@ def song_entry():
 
 
 def url_song_entry(url):
-    song_name = raw_input('Song name: ').strip()
-    artist_name = raw_input('Artist name: ').strip()
+    py_version = _get_python_version()
+
+    if py_version == 3:
+        song_name = input('Song name: ').strip()
+        artist_name = input('Artist name: ').strip()
+    else:
+        song_name = raw_input('Song name: ').strip()
+        artist_name = raw_input('Artist name: ').strip()
 
     if url == '':
         sys.stdout.write('Please enter a URL after the --url flag.')
@@ -154,13 +166,17 @@ def format_names(song_name, artist_name):
 
 def write_lyrics_to_file(lyrics, song_name, artist_name, first_try=False):
     split_lyrics = lyrics.split('\n')
+    py_version = _get_python_version()
 
     first_few_lines = split_lyrics[:6]
     sys.stdout.write('\n')
     for line in first_few_lines:
         sys.stdout.write(line + '\n')
     sys.stdout.write('\n' + 'These are the first few lyrics we found.\n')
-    response = str(raw_input('Are these correct? (y/n): '))
+    if py_version == 3:
+        response = str(input('Are these correct? (y/n): '))
+    else:
+        response = str(raw_input('Are these correct? (y/n): '))
 
     if response == 'n':
         if first_try:
@@ -205,6 +221,8 @@ def lyric_gen():
     artist = ''
     context = []
 
+    py_version = _get_python_version()
+
     with open('lyrics.txt', 'rU') as csvfile:
         reader = csv.reader(csvfile, delimiter = ';')
         data = list(reader)
@@ -243,7 +261,11 @@ def lyric_gen():
     sys.stdout.write('From the song ' + song + '\n')
     sys.stdout.write('By ' + artist + '\n\n')
 
-    response = str(raw_input('Need more context for the line? (y/n): '))
+    if py_version == 3:
+        response = str(input('Need more context for the line? (y/n): '))
+    else:
+        response = str(raw_input('Need more context for the line? (y/n): '))
+
     sys.stdout.write('\n')
 
     if response == 'y':
@@ -253,6 +275,11 @@ def lyric_gen():
         return
     else:
         return
+
+
+def _get_python_version():
+    version_info = sys.version_info
+    return version_info.major
 
 
 if __name__ == "__main__":
